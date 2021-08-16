@@ -1,0 +1,26 @@
+GET http://localhost:8080/hello
+
+###
+
+POST http://localhost:8080/hello
+Content-Type: application/json
+
+{
+  "name":"vertx"
+}
+
+###
+
+GET http://localhost:9091/hello
+
+###
+
+POST http://localhost:9091/hello
+Content-Type: application/json
+
+{
+  "name":"vertx"
+}
+
+
+
