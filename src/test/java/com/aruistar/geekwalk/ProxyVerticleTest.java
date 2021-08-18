@@ -3,6 +3,8 @@ package com.aruistar.geekwalk;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
@@ -112,5 +114,26 @@ public class ProxyVerticleTest {
       }).onFailure(handler->{
       System.out.println(handler.getMessage());
     });
+  }
+
+  @Test
+  void testWebSocket(Vertx vertx, VertxTestContext testContext){
+    HttpClientOptions clientOptions = new HttpClientOptions();
+    clientOptions.setDefaultHost("127.0.0.1");
+    clientOptions.setDefaultPort(9091);
+
+    HttpClient client = vertx.createHttpClient(clientOptions);
+
+    client.webSocket("/websocket").onSuccess(ws->{
+      ws.handler(replyBuffer ->{
+
+        System.out.println(replyBuffer);
+
+        testContext.completeNow();
+      });
+    }).onFailure(testContext::failNow);
+
+
+
   }
 }

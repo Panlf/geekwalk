@@ -5,8 +5,11 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
+import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 /**
  * @author panlf
@@ -18,6 +21,16 @@ public class ServerVerticle extends AbstractVerticle {
     HttpServer httpServer = vertx.createHttpServer();
 
     Router router  = Router.router(vertx);
+
+    router.route("/websocket").handler(routingContext ->{
+      HttpServerResponse response = routingContext.response();
+      HttpServerRequest request = routingContext.request();
+
+      request.toWebSocket().onSuccess(ws->{
+        ws.writeTextMessage("hello websocket");
+      });
+    });
+
 
     router.get("/hello").handler(routerContext ->{
       HttpServerResponse httpServerResponse = routerContext.response();

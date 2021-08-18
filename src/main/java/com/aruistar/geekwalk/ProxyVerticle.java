@@ -3,6 +3,7 @@ package com.aruistar.geekwalk;
 import com.aruistar.geekwalk.domain.Frontend;
 import com.aruistar.geekwalk.domain.Upstream;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.http.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -79,7 +80,33 @@ public class ProxyVerticle extends AbstractVerticle {
 
           String uri = req.uri().replace(upstream.getPrefix(),upstream.getPath());
 
-          upstream.getHttpClient().request(req.method(), uri, ar -> {
+          HttpClient upstreamClient = upstream.getHttpClient();
+
+          String upgrade = req.getHeader("Upgrade");
+
+          if(upgrade != null && upgrade.equalsIgnoreCase("websocket")){
+            Future<ServerWebSocket> future = req.toWebSocket();
+            future.onSuccess(ws->{
+                upstreamClient.webSocket(uri).onSuccess(clientWS ->{
+                    ws.frameHandler(clientWS::writeFrame);
+                    ws.closeHandler(x->{
+                      clientWS.close();
+                    });
+
+                    clientWS.frameHandler(ws::writeFrame);
+                    clientWS.closeHandler(x->ws.close());
+                }).onFailure(err->{
+                  error(resp,err);
+                });
+            }).onFailure(err->{
+              error(resp,err);
+            });
+            return;
+          }
+
+
+
+          upstreamClient.request(req.method(), uri, ar -> {
             if (ar.succeeded()) {
               HttpClientRequest reqUpStream = ar.result();
               reqUpStream.headers().setAll(req.headers());
@@ -91,15 +118,11 @@ public class ProxyVerticle extends AbstractVerticle {
                 resp.send(respUpstream);
 
               }).onFailure(err -> {
-
-                err.printStackTrace();
-                resp.setStatusCode(500).end(err.getMessage());
-
+                error(resp,ar.cause());
               });
 
             } else {
-              ar.cause().printStackTrace();
-              resp.setStatusCode(500).end(ar.cause().getMessage());
+              error(resp,ar.cause());
             }
           });
 
@@ -112,5 +135,9 @@ public class ProxyVerticle extends AbstractVerticle {
         System.out.println("ProxyServer Open on " + port + " port");
       }
     });
+  }
+
+  void error(HttpServerResponse response,Throwable err){
+    response.setStatusCode(500).end(err.getMessage());
   }
 }
