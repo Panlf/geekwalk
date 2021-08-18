@@ -1,5 +1,16 @@
 {
   "port": 9091,
+  "frontend": [
+    {
+      "prefix": "/web1",
+      "dir": "src/main/resources/web1/index.html",
+      "reroute404": "/web1"
+    },
+    {
+      "prefix": "/web2",
+      "dir": "src/main/resources/web2/index.html"
+    }
+  ],
   "upstream": [
     {
       "prefix": "/",

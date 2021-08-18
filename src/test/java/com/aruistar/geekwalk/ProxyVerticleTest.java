@@ -83,4 +83,34 @@ public class ProxyVerticleTest {
       System.out.println(handler.getMessage());
     });
   }
+
+  @Test
+  void testFrontend(Vertx vertx, VertxTestContext testContext){
+
+    WebClient client = WebClient.create(vertx);
+    client.get(9091,"127.0.0.1","/web1")
+      .send()
+      .onSuccess(response->{
+        System.out.println(response.statusCode());
+        System.out.println(response.bodyAsString());
+        testContext.completeNow();
+      }).onFailure(handler->{
+      System.out.println(handler.getMessage());
+    });
+  }
+
+  @Test
+  void testFrontend404(Vertx vertx, VertxTestContext testContext){
+
+    WebClient client = WebClient.create(vertx);
+    client.get(9091,"127.0.0.1","/web2/nonage")
+      .send()
+      .onSuccess(response->{
+        System.out.println(response.statusCode());
+        System.out.println(response.bodyAsString());
+        testContext.completeNow();
+      }).onFailure(handler->{
+      System.out.println(handler.getMessage());
+    });
+  }
 }
