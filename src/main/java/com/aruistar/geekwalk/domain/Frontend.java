@@ -10,10 +10,30 @@ public class Frontend {
   String prefix;
   String dir;
   String reroute404;
+  boolean cachingEnabled;
+  long maxAgeSeconds;
+
+  public long getMaxAgeSeconds() {
+    return maxAgeSeconds;
+  }
+
+  public void setMaxAgeSeconds(long maxAgeSeconds) {
+    this.maxAgeSeconds = maxAgeSeconds;
+  }
+
+  public boolean isCachingEnabled() {
+    return cachingEnabled;
+  }
+
+  public void setCachingEnabled(boolean cachingEnabled) {
+    this.cachingEnabled = cachingEnabled;
+  }
 
   public Frontend(JsonObject jsonObject) {
     this.dir = jsonObject.getString("dir");
     this.prefix = jsonObject.getString("prefix");
+    this.cachingEnabled = jsonObject.getBoolean("cachingEnabled",true);
+    this.maxAgeSeconds = jsonObject.getLong("maxAgeSeconds",24 * 60 * 60L);
     if(!jsonObject.getString("reroute404","").isBlank()){
       this.reroute404 = jsonObject.getString("reroute404");
     }

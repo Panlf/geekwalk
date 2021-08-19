@@ -132,8 +132,5 @@ public class ProxyVerticleTest {
         testContext.completeNow();
       });
     }).onFailure(testContext::failNow);
-
-
-
   }
 }

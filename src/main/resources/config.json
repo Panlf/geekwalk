@@ -4,11 +4,15 @@
     {
       "prefix": "/web1",
       "dir": "src/main/resources/web1/index.html",
-      "reroute404": "/web1"
+      "reroute404": "/web1",
+      "cachingEnabled": true,
+      "maxAgeSeconds": 30
     },
     {
       "prefix": "/web2",
-      "dir": "src/main/resources/web2/index.html"
+      "dir": "src/main/resources/web2/index.html",
+      "cachingEnabled": false,
+      "maxAgeSeconds": 30
     }
   ],
   "upstream": [

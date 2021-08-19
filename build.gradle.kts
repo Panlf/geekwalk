@@ -31,6 +31,7 @@ dependencies {
   implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
   implementation("io.vertx:vertx-web-client")
   implementation("io.vertx:vertx-web")
+  implementation("org.apache.logging.log4j:log4j-slf4j18-impl:2.11.1")
   testImplementation("io.vertx:vertx-junit5")
   testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }

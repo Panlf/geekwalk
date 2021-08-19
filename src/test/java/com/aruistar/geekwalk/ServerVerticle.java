@@ -5,17 +5,19 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author panlf
  * @date 2021/8/3
  */
 public class ServerVerticle extends AbstractVerticle {
+
+ private static final Logger log = LoggerFactory.getLogger(ServerVerticle.class);
+
   @Override
   public void start() throws Exception {
     HttpServer httpServer = vertx.createHttpServer();
@@ -33,9 +35,19 @@ public class ServerVerticle extends AbstractVerticle {
 
 
     router.get("/hello").handler(routerContext ->{
+
       HttpServerResponse httpServerResponse = routerContext.response();
 
       HttpServerRequest httpServerRequest = routerContext.request();
+
+      log.info("request host : {} ,\n" +
+          "request localAddress : {} ,\n" +
+          "request method : {} ,\n" +
+          "request uri : {},\n",
+        httpServerRequest.host(),
+        httpServerRequest.localAddress(),
+        httpServerRequest.method(),
+        httpServerRequest.uri());
 
       httpServerResponse.end("hello world");
     });
