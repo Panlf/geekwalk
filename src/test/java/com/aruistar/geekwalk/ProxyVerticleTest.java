@@ -22,19 +22,28 @@ public class ProxyVerticleTest {
 
   @BeforeEach
   void setUp(Vertx vertx, VertxTestContext testContext){
-
     FileSystem fs = vertx.fileSystem();
     fs.readFile("src/main/resources/config.json",result->{
       if(result.succeeded()){
-
-        JsonObject config = result.result().toJsonObject();
-        DeploymentOptions deploymentOptions = new DeploymentOptions();
-        deploymentOptions.setConfig(config);
-
-        vertx.deployVerticle(new ServerVerticle(), ar -> {
-          if (ar.succeeded()) {
-            vertx.deployVerticle(new ProxyVerticle(), deploymentOptions, testContext.succeedingThenComplete());
-          }
+        JsonObject  serverConfigA = new JsonObject();
+        serverConfigA.put("port",8081);
+        DeploymentOptions optionsA = new DeploymentOptions();
+        optionsA.setConfig(serverConfigA);
+        vertx.deployVerticle(new ServerVerticle(),optionsA,a1->{
+            if(a1.succeeded()){
+              JsonObject  serverConfigB = new JsonObject();
+              serverConfigB.put("port",8080);
+              DeploymentOptions optionsB = new DeploymentOptions();
+              optionsB.setConfig(serverConfigB);
+              vertx.deployVerticle(new ServerVerticle(),optionsB,ar -> {
+                if (ar.succeeded()) {
+                  JsonObject config = result.result().toJsonObject();
+                  DeploymentOptions deploymentOptions = new DeploymentOptions();
+                  deploymentOptions.setConfig(config);
+                  vertx.deployVerticle(new ProxyVerticle(), deploymentOptions, testContext.succeedingThenComplete());
+                }
+              });
+            }
         });
       }
     });
@@ -72,18 +81,23 @@ public class ProxyVerticleTest {
 
 
   @Test
-  void testProxyServerGet(Vertx vertx, VertxTestContext testContext){
+  void testProxyServerGet(Vertx vertx, VertxTestContext testContext) throws InterruptedException {
 
     WebClient client = WebClient.create(vertx);
-    client.get(9091,"127.0.0.1","/hello")
-      .send()
-      .onSuccess(response->{
-        System.out.println(response.statusCode());
-        System.out.println(response.bodyAsString());
-        testContext.completeNow();
-      }).onFailure(handler->{
-      System.out.println(handler.getMessage());
-    });
+
+    for(int i=0;i<10;i++) {
+
+     // Thread.sleep(1000);
+      client.get(9091, "127.0.0.1", "/hello")
+        .send()
+        .onSuccess(response -> {
+          System.out.println(response.statusCode());
+          System.out.println(response.bodyAsString());
+          testContext.completeNow();
+        }).onFailure(handler -> {
+        System.out.println(handler.getMessage());
+      });
+    }
   }
 
   @Test

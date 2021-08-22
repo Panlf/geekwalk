@@ -1,5 +1,6 @@
 package com.aruistar.geekwalk;
 
+import com.aruistar.geekwalk.domain.Backend;
 import com.aruistar.geekwalk.domain.Frontend;
 import com.aruistar.geekwalk.domain.Upstream;
 import io.vertx.core.AbstractVerticle;
@@ -25,11 +26,11 @@ public class ProxyVerticle extends AbstractVerticle {
     System.out.println(config());
     int port = config().getInteger("port");
 
-    List<Upstream> upstreamList = new ArrayList<>();
+    List<Backend> backendList = new ArrayList<>();
     List<Frontend> frontendList = new ArrayList<>();
 
-    config().getJsonArray("upstream").forEach(json -> {
-      upstreamList.add(new Upstream((JsonObject) json, vertx));
+    config().getJsonArray("backend").forEach(json -> {
+      backendList.add(new Backend((JsonObject) json,vertx));
     });
 
     config().getJsonArray("frontend").forEach(json -> {
@@ -43,7 +44,7 @@ public class ProxyVerticle extends AbstractVerticle {
 
     Router router = Router.router(vertx);
     for (Frontend frontend:frontendList){
-      router.route(frontend.getPrefix())
+      router.route(frontend.getPrefix()+"/*")
         .handler(rc->{
           if(!frontend.isCachingEnabled()){
             MultiMap headers = rc.response().headers();
@@ -88,12 +89,12 @@ public class ProxyVerticle extends AbstractVerticle {
 
       req.pause();
 
-      for (Upstream upstream : upstreamList) {
-        if (path.startsWith(upstream.getPrefix())) {
+      for (Backend backend : backendList) {
+        if (path.startsWith(backend.getPrefix())) {
+          Upstream upstream = backend.getUpstream();
+          String uri = req.uri().replace(backend.getPrefix(),upstream.getPath());
 
-          String uri = req.uri().replace(upstream.getPrefix(),upstream.getPath());
-
-          HttpClient upstreamClient = upstream.getHttpClient();
+          HttpClient upstreamClient = upstream.getClient();
 
           String upgrade = req.getHeader("Upgrade");
 
@@ -117,12 +118,10 @@ public class ProxyVerticle extends AbstractVerticle {
             return;
           }
 
-
-
           upstreamClient.request(req.method(), uri, ar -> {
             if (ar.succeeded()) {
               HttpClientRequest reqUpStream = ar.result();
-              reqUpStream.headers().setAll(req.headers());
+              reqUpStream.headers().setAll(req.headers().remove("host"));
 
               reqUpStream.send(req).onSuccess(respUpstream -> {
 

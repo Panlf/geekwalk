@@ -20,9 +20,29 @@ public class ServerVerticle extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
+
+    int port = config().getInteger("port");
+
+
     HttpServer httpServer = vertx.createHttpServer();
 
     Router router  = Router.router(vertx);
+
+
+    router.route().handler(rc->{
+      HttpServerRequest httpServerRequest = rc.request();
+
+      log.info("request host : {} ,\n" +
+          "request localAddress : {} ,\n" +
+          "request method : {} ,\n" +
+          "request uri : {},\n",
+        httpServerRequest.host(),
+        httpServerRequest.localAddress(),
+        httpServerRequest.method(),
+        httpServerRequest.uri());
+
+      rc.next();
+    });
 
     router.route("/websocket").handler(routingContext ->{
       HttpServerResponse response = routingContext.response();
@@ -40,15 +60,6 @@ public class ServerVerticle extends AbstractVerticle {
 
       HttpServerRequest httpServerRequest = routerContext.request();
 
-      log.info("request host : {} ,\n" +
-          "request localAddress : {} ,\n" +
-          "request method : {} ,\n" +
-          "request uri : {},\n",
-        httpServerRequest.host(),
-        httpServerRequest.localAddress(),
-        httpServerRequest.method(),
-        httpServerRequest.uri());
-
       httpServerResponse.end("hello world");
     });
 
@@ -64,9 +75,9 @@ public class ServerVerticle extends AbstractVerticle {
           rc.response().setStatusCode(500).end("Server Verticle Error :"+ rc.failure().getMessage());
     });
 
-    httpServer.requestHandler(router).listen(8080,event -> {
+    httpServer.requestHandler(router).listen(port,event -> {
         if(event.succeeded()){
-          System.out.println("Server Open on 8080 port");
+          System.out.println("Server Open on "+port+" port");
         }
     });
   }
